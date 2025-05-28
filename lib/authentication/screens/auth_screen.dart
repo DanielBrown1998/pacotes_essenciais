@@ -146,8 +146,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     ElevatedButton(
                       style: const ButtonStyle(
                         backgroundColor:
-                            MaterialStatePropertyAll(ListinColors.purple),
-                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                            WidgetStatePropertyAll(ListinColors.purple),
+                        foregroundColor: WidgetStatePropertyAll(Colors.white),
                       ),
                       onPressed: () {
                         botaoEnviarClicado();
