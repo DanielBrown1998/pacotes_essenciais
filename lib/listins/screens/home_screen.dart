@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pacotes_essenciais/authentication/models/mock_user.dart';
+import 'package:pacotes_essenciais/listins/database/database.dart';
 import 'package:pacotes_essenciais/listins/screens/widgets/home_drawer.dart';
 import 'package:pacotes_essenciais/listins/screens/widgets/home_listin_item.dart';
 import '../models/listin.dart';
@@ -16,68 +17,80 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Listin> listListins = [];
-
+  late AppDatabase _appDatabase;
   @override
   void initState() {
+    _appDatabase = AppDatabase();
     // TODO: Ao implementar os Listins, adicionar o refresh aqui
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _appDatabase.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: HomeDrawer(user: widget.user),
-      appBar: AppBar(
-        title: const Text("Minhas listas"),
-      ),
+      appBar: AppBar(title: const Text("Minhas listas")),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showAddModal();
         },
         child: const Icon(Icons.add),
       ),
-      body: (listListins.isEmpty)
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset("assets/bag.png"),
-                  const SizedBox(height: 32),
-                  const Text(
-                    "Nenhuma lista ainda.\nVamos criar a primeira?",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () {
-                return refresh();
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 32, 32, 0),
-                child: ListView(
-                  children: List.generate(
-                    listListins.length,
-                    (index) {
+      body:
+          (listListins.isEmpty)
+              ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset("assets/bag.png"),
+                    const SizedBox(height: 32),
+                    const Text(
+                      "Nenhuma lista ainda.\nVamos criar a primeira?",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+              )
+              : RefreshIndicator(
+                onRefresh: () {
+                  return refresh();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(32, 32, 32, 0),
+                  child: ListView(
+                    children: List.generate(listListins.length, (index) {
                       Listin listin = listListins[index];
                       return HomeListinItem(
                         listin: listin,
                         showOptionModal: showOptionModal,
                       );
-                    },
+                    }),
                   ),
                 ),
               ),
-            ),
     );
   }
 
   showAddModal({Listin? listin}) {
-    showAddEditListinModal(context: context, onRefresh: refresh, model: listin);
+    showAddEditListinModal(
+      context: context,
+      onRefresh: refresh,
+      model: listin,
+      appDatabase: _appDatabase,
+    ).then((value) {
+      if (value != null && value) {
+        refresh();
+      }
+    });
   }
 
   showOptionModal(Listin listin) {

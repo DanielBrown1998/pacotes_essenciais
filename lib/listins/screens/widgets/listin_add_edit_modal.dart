@@ -1,10 +1,12 @@
 import "package:flutter/material.dart";
+import "package:pacotes_essenciais/listins/database/database.dart";
 import "package:pacotes_essenciais/listins/models/listin.dart";
 
 showAddEditListinModal({
   required BuildContext context,
   required Function onRefresh,
   Listin? model,
+  required AppDatabase appDatabase,
 }) {
   // Labels à serem mostradas no Modal
   String labelTitle = "Adicionar lista de compras";
@@ -33,9 +35,7 @@ showAddEditListinModal({
     isScrollControlled: true,
     // Define que as bordas verticais serão arredondadas
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(24),
-      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     builder: (context) {
       return SingleChildScrollView(
@@ -66,9 +66,7 @@ showAddEditListinModal({
                   label: Text("Observações"),
                 ),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -78,11 +76,9 @@ showAddEditListinModal({
                     },
                     child: Text(labelSkipButton),
                   ),
-                  const SizedBox(
-                    width: 16,
-                  ),
+                  const SizedBox(width: 16),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // Criar um objeto Listin com as infos
                       Listin listin = Listin(
                         // Em criação, esse valor será autogerado pelo banco.
@@ -95,9 +91,28 @@ showAddEditListinModal({
 
                       if (model == null) {
                         // TODO - CRUD Listin: salvar Listin
+                        listin.id =
+                            (await appDatabase.insertListin(listin)).toString();
+                        if (listin.id == "0") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Erro ao salvar a lista."),
+                            ),
+                          );
+                          return;
+                        }
                       } else {
                         // TODO - CRUD Listin: editar Listin
                         listin.id = model.id;
+                        bool updated = (await appDatabase.updateListin(listin));
+                        if (!updated) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Erro ao atualizar a lista."),
+                            ),
+                          );
+                          return;
+                        }
                       }
 
                       // Atualizar a lista
