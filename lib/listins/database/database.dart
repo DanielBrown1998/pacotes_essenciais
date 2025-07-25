@@ -1,6 +1,7 @@
 import "dart:io";
 import "package:pacotes_essenciais/listins/models/listin.dart";
-import "package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart" show applyWorkaroundToOpenSqlite3OnOldAndroidVersions;
+import "package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart"
+    show applyWorkaroundToOpenSqlite3OnOldAndroidVersions;
 
 import "package:drift/drift.dart";
 import "package:drift/native.dart";
@@ -34,6 +35,7 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
   }
+
   Future<bool> updateListin(Listin listin) async {
     return await update(listinTable).replace(
       ListinTableCompanion(
@@ -44,6 +46,35 @@ class AppDatabase extends _$AppDatabase {
         dateUpdate: Value(listin.dateUpdate),
       ),
     );
+  }
+
+  Future<List<Listin>> getListins(String? choice) async {
+    List<Listin> list = [];
+    var query = select(listinTable);
+    if (choice != null) {
+      if (choice == "Ordenar por nome") {
+        query.orderBy([
+          (listin) =>
+              OrderingTerm(expression: listin.name, mode: OrderingMode.asc),
+        ]);
+      } else {
+        query.orderBy([
+          (listin) => OrderingTerm(
+            expression: listin.dateUpdate,
+            mode: OrderingMode.desc,
+          ),
+        ]);
+      }
+    }
+    var listinData = await query.get();
+    for (ListinTableData row in listinData) {
+      list.add(Listin.fromMap(row.toJson()));
+    }
+    return list;
+  }
+
+  Future<int> deleteListin(int id) async {
+    return await (delete(listinTable)..where((row) => row.id.equals(id))).go();
   }
 }
 

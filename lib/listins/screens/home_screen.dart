@@ -18,10 +18,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Listin> listListins = [];
   late AppDatabase _appDatabase;
+
+  String byName = "Ordenar por nome";
+  String byUpdateData = "Ordenar por Data de alteracao";
+  String? choice;
   @override
   void initState() {
     _appDatabase = AppDatabase();
-    // TODO: Ao implementar os Listins, adicionar o refresh aqui
+    refresh();
+    choice = byName;
     super.initState();
   }
 
@@ -35,7 +40,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: HomeDrawer(user: widget.user),
-      appBar: AppBar(title: const Text("Minhas listas")),
+      appBar: AppBar(
+        title: const Text("Minhas listas"),
+        centerTitle: false,
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16),
+        actions: [
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 3,
+            child: DropdownButton(
+              isExpanded: true,
+              value: choice,
+              icon: Icon(Icons.filter),
+              menuWidth: MediaQuery.of(context).size.width / 2,
+              items: [
+                DropdownMenuItem(
+                  value: byName,
+                  child: Text(byName, style: TextStyle(fontSize: 12)),
+                ),
+                DropdownMenuItem(
+                  value: byUpdateData,
+                  child: Text(byUpdateData, style: TextStyle(fontSize: 12)),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  if (value != null) choice = value;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showAddModal();
@@ -108,18 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
   refresh() async {
     // Basta alimentar essa variável com Listins que, quando o método for
     // chamado, a tela sera reconstruída com os itens.
-    List<Listin> listaListins = [];
-
-    //TODO - CRUD Listin: remover código mockado.
-    listaListins.add(
-      Listin(
-        id: "L01",
-        name: "Feira do mês",
-        obs: "Para compras de reabastecimento mensais.",
-        dateCreate: DateTime.now(),
-        dateUpdate: DateTime.now(),
-      ),
-    );
+    List<Listin> listaListins = await _appDatabase.getListins(choice);
 
     setState(() {
       listListins = listaListins;
@@ -127,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void remove(Listin model) async {
-    // TODO - CRUD Listin: remover o Listin
+    await _appDatabase.deleteListin(int.parse(model.id));
     refresh();
   }
 }

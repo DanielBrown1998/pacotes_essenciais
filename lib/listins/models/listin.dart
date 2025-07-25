@@ -14,7 +14,7 @@ class Listin {
   });
 
   Listin.fromMap(Map<String, dynamic> map)
-      : id = map["id"],
+      : id = map["id"].toString(),
         name = map["name"],
         obs = map["obs"],
         dateCreate = DateTime.parse(map["dateCreate"]),
